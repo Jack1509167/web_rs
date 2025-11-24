@@ -1,0 +1,91 @@
+---
+import MongodbRS from "../lib/core/mongodb";
+import Main from "../component/main.astro";
+import SectionTitle from "../component/sectionTitle.astro";
+import SearchComponent from "../component/search.astro";
+const { noreg } = Astro.locals;
+
+const result = await new MongodbRS().db_collection("rs_janjiTemu").readSchedule(noreg);
+const resultDoctor = await new MongodbRS().db_collection("rs_doctors").readDoctor(result?.doctor);
+---
+
+<Main endpoint="Cari Jadwal">
+  <section id="search" class="pt-12">
+    <div class="w-full">
+      <SectionTitle title="Cari Jadwal" />
+      <SearchComponent search="Cari Janji Temu" type="searchNoreg" label="Nomor Registrasi" name="noreg" action="/portal" input={noreg} />
+      <div class="flex justify-center pt-12">
+        {
+          result && (
+            <div class="w-full form_card max-w-md">
+              <div class="form p-2">
+                <h4 class="font-semibold text-center text-2xl py-2">Jadwal Janji Temu</h4>
+
+                <div class="relative overflow-x-auto">
+                  <table class="w-full text-sm text-left rtl:text-right text-gray-500">
+                    <tbody>
+                      <tr class="bg-white border-b border-gray-200">
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap ">
+                          Nomor Registrasi
+                        </th>
+                        <td class="p-4">{result.noreg}</td>
+                      </tr>
+                      <tr class="bg-white border-b border-gray-200">
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                          Nama Pasien
+                        </th>
+                        <td class="p-4">{result.name}</td>
+                      </tr>
+                      <tr class="bg-white border-b border-gray-200">
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                          Email
+                        </th>
+                        <td class="p-4">{result.email}</td>
+                      </tr>
+                      <tr class="bg-white border-b border-gray-200">
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                          Nomor Telepon
+                        </th>
+                        <td class="p-4">{result.hp}</td>
+                      </tr>
+                      <tr class="bg-white border-b border-gray-200">
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                          Tanggal Temu
+                        </th>
+                        <td class="p-4">{result.date}</td>
+                      </tr>
+                      <tr class="bg-white border-b border-gray-200">
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                          Tanggal Reservasi
+                        </th>
+                        <td class="p-4">{result.createAt}</td>
+                      </tr>
+                      <tr class="bg-white border-b border-gray-200">
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                          Dokter Spesialis
+                        </th>
+                        <td class="p-4">{result.spesialist}</td>
+                      </tr>
+                      <tr class="bg-white border-b border-gray-200">
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                          Nama Dokter
+                        </th>
+                        <td class="p-4">{resultDoctor?.name}</td>
+                      </tr>
+                      <tr class="bg-white">
+                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                          Deskripsi Penyakit
+                        </th>
+                        <td class="p-4">{result.complaint}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </section>
+</Main>

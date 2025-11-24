@@ -1,0 +1,119 @@
+---
+import Main from "../component/main.astro";
+import SectionTitle from "../component/sectionTitle.astro";
+import DoctorSelector from "../component/selectSpesialist";
+import mongodbRS from "../lib/core/mongodb";
+import { z } from "zod";
+import { createAlert } from "../lib/core/alert";
+import { date } from "astro:schema";
+
+let error;
+let values: { [key: string]: string | undefined } = {};
+
+const flash = Astro.locals;
+if (Astro.request.method == "GET") {
+  if (!flash.userData) return Astro.redirect("/");
+}
+const read: { name: string; email: string; hp: string; date: string; spesialist: string } = JSON.parse(flash.userData || "{}");
+// console.log(read);
+
+const db_metadata = new mongodbRS().db_collection("rs_metadata");
+const spesialist: [{ code: string; name: string }] = await db_metadata.readMetadata("spesialist");
+const db_doctors = new mongodbRS().db_collection("rs_doctors");
+const doctor = await db_doctors.dataAll();
+
+// Validation
+if (Astro.request.method == "POST") {
+  const formData = await Astro.request.formData();
+  const data = Object.fromEntries(formData.entries());
+
+  const AppointmentSchema = z.object({
+    name: z
+      .string()
+      .regex(/^[a-zA-Z\s]+$/, "name")
+      .min(3, "name"),
+    email: z.string().email("mail"),
+    phone: z.string().regex(/^\+?[0-9]{8,15}$/, "phone"),
+    date: z.string().refine((val) => new Date(val) >= new Date(new Date().setHours(0, 0, 0, 0)), "date"),
+    complaint: z.string().min(10, "complaint"),
+    spesialist: z.string().min(1, "spesialist"),
+    doctor: z
+      .string()
+      .min(5, "doctor")
+      .regex(/^[0-9]+$/, "doctor"),
+  });
+
+  try {
+    const validatedData = AppointmentSchema.parse(data);
+    const addSchedule = await new mongodbRS().db_collection("rs_janjiTemu").insertSchedule(data);
+    Astro.cookies.set("userId", addSchedule);
+    return Astro.redirect("/addSchedule");
+  } catch (e) {
+    if (e instanceof z.ZodError) {
+      error = e.errors[0].message;
+      values = data as { [key: string]: string | undefined };
+    }
+  }
+}
+
+if (read.name) values = read;
+
+console.log(values);
+---
+
+<Main endpoint="Janji Temu">
+  <section id="janji-temu" class="bg-cover bg-center pt-12">
+    <div class="container">
+      <div class="flex flex-wrap justify-center px-6">
+        <SectionTitle title="Janji Temu" />
+        <form action="" method="post" class="w-full flex flex-wrap gap-4 justify-center">
+          <div class="form_card">
+            <div class="form form_card">
+              <div>
+                <p class="font-semibold underline text-xl text-center py-4">Informasi Pasien</p>
+              </div>
+              <div class="">
+                <label for="name" class={"form_label " + (error == "name" ? "text-red-700" : "")}>Nama</label>
+                <input type="text" name="name" id="name" class={"form_input " + (error == "name" ? "!bg-red-50 !border-red-500 !text-red-900 !placeholder-red-700 !ring-red-700 !focus:border-red-500" : "")} required value={values.name} />
+                {error == "name" && <p class="mt-2 text-sm text-red-500">Nama tidak valid!</p>}
+              </div>
+              <div class="">
+                <label for="email" class={"form_label " + (error == "mail" ? "text-red-700" : "")}>Email</label>
+                <input type="email" name="email" id="email" class={"form_input " + (error == "mail" ? "!bg-red-50 !border-red-500 !text-red-900 !placeholder-red-700 !ring-red-700 !focus:border-red-500" : "")} required value={values.email} />
+                {error == "mail" && <p class="mt-2 text-sm text-red-500">Email tidak valid!</p>}
+              </div>
+              <div class="">
+                <label for="phone" class={"form_label " + (error == "phone" ? "text-red-700" : "")}>Nomor HP</label>
+                <input type="tel" name="phone" id="phone" class={"form_input " + (error == "phone" ? "!bg-red-50 !border-red-500 !text-red-900 !placeholder-red-700 !ring-red-700 !focus:border-red-500" : "")} required value={values.phone} />
+                {error == "phone" && <p class="mt-2 text-sm text-red-500">Masukkan nomor hp dengan benar!</p>}
+              </div>
+              <div class="">
+                <label for="date" class={"form_label " + (error == "date" ? "text-red-700" : "")}>Tanggal Temu</label>
+                <input type="date" name="date" id="date" class={"form_input " + (error == "date" ? "!bg-red-50 !border-red-500 !text-red-900 !placeholder-red-700 !ring-red-700 !focus:border-red-500" : "")} required value={values.date} />
+                {error == "date" && <p class="mt-2 text-sm text-red-500">Atur tanggal sekarang atau mendatang!</p>}
+              </div>
+              <div class="">
+                <label for="complaint" class={"form_label " + (error == "complaint" ? "text-red-700" : "")}>Ceritakan tentang penyakit Anda</label>
+                <textarea name="complaint" id="complaint" class={"form_input " + (error == "complaint" ? "!bg-red-50 !border-red-500 !text-red-900 !placeholder-red-700 !ring-red-700 !focus:border-red-500" : "")} rows="4" required
+                  >{values.complaint}</textarea
+                >
+                {error == "complaint" && <p class="mt-2 text-sm text-red-500">Minimal 10 kata.</p>}
+              </div>
+            </div>
+          </div>
+          <div class="form_card !pb-0">
+            <div class="form">
+              <div>
+                <p class="font-semibold underline text-xl text-center py-4">Cari Dokter</p>
+              </div>
+              <DoctorSelector doctors={doctor} spesialists={spesialist} spesialistSelected={values.spesialist} error={error} client:load />
+            </div>
+          </div>
+          <div class="flex justify-center w-full">
+            <button type="submit" class="cursor-pointer text-white bg-primary rounded-xl w-auto px-14 py-3 text-center">Buat Janji</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</Main>

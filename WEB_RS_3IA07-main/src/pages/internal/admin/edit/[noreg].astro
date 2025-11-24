@@ -1,0 +1,157 @@
+---
+import "../../../../styles/global.css";
+import MongodbRS from "../../../../lib/core/mongodb";
+import { createAlert } from "../../../../lib/core/alert";
+import DoctorSelector from "../../../../component/selectSpesialist";
+import { z } from "zod";
+import type { OptionalId, Document } from "mongodb";
+
+if (Astro.locals.prompt == "needLogin") return Astro.redirect("/internal/admin");
+
+const { noreg } = Astro.params;
+let scheduleData: OptionalId<Document> | null | undefined = await new MongodbRS().db_collection("rs_janjiTemu").readSchedule(noreg);
+if (!scheduleData) {
+  createAlert(Astro.cookies, "Nomor Registrasi tidak ditemukan", "/internal/admin");
+  return Astro.redirect("/alert");
+}
+const readDoctor = await new MongodbRS().db_collection("rs_doctors").dataAll();
+const spesialists = await new MongodbRS().db_collection("rs_metadata").readMetadata("spesialist");
+
+function konversiTanggal(tanggalIndonesia: string) {
+  const bulanMap: { [key: string]: string } = {
+    Januari: "01",
+    Februari: "02",
+    Maret: "03",
+    April: "04",
+    Mei: "05",
+    Juni: "06",
+    Juli: "07",
+    Agustus: "08",
+    September: "09",
+    Oktober: "10",
+    November: "11",
+    Desember: "12",
+  };
+
+  // 1. Pisahkan "Selasa," (kita tidak butuh harinya)
+  const bagianTanggal = tanggalIndonesia.split(", ")[1]; // Hasil: "28 Oktober 2025"
+
+  // 2. Pisahkan hari, bulan, tahun
+  const [hari, namaBulan, tahun] = bagianTanggal.split(" "); // ["28", "Oktober", "2025"]
+
+  // 3. Konversi bulan
+  const bulan = bulanMap[namaBulan]; // "10"
+
+  // 4. Pastikan hari 2 digit (padding)
+  const formattedHari = String(hari).padStart(2, "0");
+
+  // 5. Gabungkan
+  return `${tahun}-${bulan}-${formattedHari}`; // "2025-10-28"
+}
+
+const dateOnSchedule = konversiTanggal(scheduleData.date);
+
+let error;
+if (Astro.request.method == "POST") {
+  const formData = await Astro.request.formData();
+  const data = Object.fromEntries(formData.entries());
+
+  const AppointmentSchema = z.object({
+    name: z
+      .string()
+      .regex(/^[a-zA-Z\s]+$/, "name")
+      .min(3, "name"),
+    email: z.string().email("mail"),
+    hp: z.string().regex(/^\+?[0-9]{8,15}$/, "hp"),
+    date: z.string().refine((val) => new Date(val) >= new Date(new Date().setHours(0, 0, 0, 0)), "date"),
+    complaint: z.string().min(10, "complaint"),
+    spesialist: z.string().min(1, "spesialist"),
+    doctor: z
+      .string()
+      .min(5, "doctor")
+      .regex(/^[0-9]+$/, "doctor"),
+  });
+
+  try {
+    const validatedData = AppointmentSchema.parse(data);
+    const updateSchedule = await new MongodbRS().db_collection("rs_janjiTemu").updateSchedule(data);
+    createAlert(Astro.cookies, "Update Successfull\nRedirecting...", "/internal/admin");
+    return Astro.redirect("/alert");
+  } catch (e) {
+    if (e instanceof z.ZodError) {
+      error = e.errors[0].message;
+      scheduleData = data;
+    }
+  }
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ubah Data Jadwal - Admin</title>
+  </head>
+  <body>
+    <section id="edit" class="pt-12 px-12 w-full">
+      <div class="container">
+        <div class="flex flex-wrap">
+          <div class="w-full pb-12">
+            <h4 class="text-2xl font-bold text-center">Ubah Data Jadwal</h4>
+          </div>
+          <div class="w-full flex justify-center items-center">
+            <div class="form_card">
+              <form action="" method="post" class="form">
+                <div class="">
+                  <label for="noreg" class={"form_label " + (error == "noreg" ? "text-red-700" : "")}>Nomor</label>
+                  <input
+                    type="text"
+                    name="noreg"
+                    id="noreg"
+                    class={"form_input_disable " + (error == "noreg" ? "!bg-red-50 !border-red-500 !text-red-900 !placeholder-red-700 !ring-red-700 !focus:border-red-500" : "")}
+                    required
+                    readonly
+                    value={scheduleData.noreg}
+                  />
+                  {error == "noreg" && <p class="mt-2 text-sm text-red-500">Nama tidak valid!</p>}
+                </div>
+                <div class="">
+                  <label for="name" class={"form_label " + (error == "name" ? "text-red-700" : "")}>Nama</label>
+                  <input type="text" name="name" id="name" class={"form_input " + (error == "name" ? "!bg-red-50 !border-red-500 !text-red-900 !placeholder-red-700 !ring-red-700 !focus:border-red-500" : "")} required value={scheduleData.name} />
+                  {error == "name" && <p class="mt-2 text-sm text-red-500">Nama tidak valid!</p>}
+                </div>
+                <div class="">
+                  <label for="email" class={"form_label " + (error == "mail" ? "text-red-700" : "")}>Email</label>
+                  <input type="email" name="email" id="email" class={"form_input " + (error == "mail" ? "!bg-red-50 !border-red-500 !text-red-900 !placeholder-red-700 !ring-red-700 !focus:border-red-500" : "")} required value={scheduleData.email} />
+                  {error == "mail" && <p class="mt-2 text-sm text-red-500">Email tidak valid!</p>}
+                </div>
+                <div class="">
+                  <label for="hp" class={"form_label " + (error == "hp" ? "text-red-700" : "")}>Nomor HP</label>
+                  <input type="tel" name="hp" id="hp" class={"form_input " + (error == "hp" ? "!bg-red-50 !border-red-500 !text-red-900 !placeholder-red-700 !ring-red-700 !focus:border-red-500" : "")} required value={scheduleData.hp} />
+                  {error == "phone" && <p class="mt-2 text-sm text-red-500">Masukkan nomor hp dengan benar!</p>}
+                </div>
+                <div class="">
+                  <label for="date" class={"form_label " + (error == "date" ? "text-red-700" : "")}>Tanggal Temu</label>
+                  <input type="date" name="date" id="date" class={"form_input " + (error == "date" ? "!bg-red-50 !border-red-500 !text-red-900 !placeholder-red-700 !ring-red-700 !focus:border-red-500" : "")} required value={dateOnSchedule} />
+                  {error == "date" && <p class="mt-2 text-sm text-red-500">Atur tanggal sekarang atau mendatang!</p>}
+                </div>
+                <DoctorSelector doctors={readDoctor} spesialists={spesialists} spesialistSelected={scheduleData.spesialist} doctorSelected={scheduleData.doctor} error={error} client:load />
+                <div class="">
+                  <label for="complaint" class={"form_label " + (error == "complaint" ? "text-red-700" : "")}>Ceritakan tentang penyakit Pasien</label>
+                  <textarea name="complaint" id="complaint" class={"form_input " + (error == "complaint" ? "!bg-red-50 !border-red-500 !text-red-900 !placeholder-red-700 !ring-red-700 !focus:border-red-500" : "")} rows="4" required
+                    >{scheduleData.complaint}</textarea
+                  >
+                  {error == "complaint" && <p class="mt-2 text-sm text-red-500">Minimal 10 kata.</p>}
+                </div>
+                <div class="flex justify-center w-full">
+                  <button type="submit" class="cursor-pointer text-white bg-primary rounded-xl w-auto px-14 py-3 text-center font-semibold">Ubah Data Pasien</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

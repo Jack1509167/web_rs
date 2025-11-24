@@ -1,0 +1,132 @@
+---
+const { endpoint } = Astro.props;
+import "../styles/global.css";
+const metadata = {
+  mail: "rumahsakitsentosa@gmail.com",
+  phone: "+62812345678901",
+  name: "Rumah Sakit Sentosa",
+  desc: "Rumah Sakit Sentosa didirikan pada tahun 2007, merupakan Rumah Sakit Tipe C Unggulan di Kota Depok yang terakreditasi Paripurna dengan kapasitas 120 Tempat Tidur. RS Sentosa dilengkapi dengan fasilitas medis modern, tenaga medis profesional, dan layanan unggulan di bidang kedokteran okupasi serta rehabilitasi medik.",
+  short_desc: "Rumah Sakit Sentosa dilengkapi dengan fasilitas medis modern, tenaga medis profesional, dan layanan unggulan di bidang kedokteran okupasi serta rehabilitasi medik.",
+};
+---
+
+<html lang="id" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{endpoint}</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link href="css/bootstrap-icons/bootstrap-icons.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://flowbite.com/docs/main.css?v=3.1.2a" />
+  </head>
+
+  <body>
+    <div class="absolute top-0 left-0 z-10 flex w-full items-center bg-primary text-white" id="headContact">
+      <div class="px-2 block lg:flex items-center gap-4 lg:py-4">
+        <a href={`tel:${metadata.phone}`} class="bi-phone flex items-center pt-4 lg:pt-0 text-sm">
+          <p class="ps-2">{metadata.phone}</p>
+        </a>
+        <a href={`mailto:${metadata.mail}`} class="bi-envelope flex items-center pb-4 pt-2 lg:pb-0 lg:pt-0 text-sm">
+          <p class="ps-2">{metadata.mail}</p>
+        </a>
+      </div>
+    </div>
+    <header class="absolute top-20 lg:top-14 left-0 z-12 flex w-full items-center bg-white text-primary border-b transition duration-200 ease-in-out">
+      <div class="w-full px-6">
+        <div class="relative flex items-center justify-between">
+          <div class="px-4">
+            <a href="/" class="block py-6 text-xl font-bold"> {metadata.name} </a>
+          </div>
+          <div class="flex items-center px-4">
+            <button id="menus" name="menus" type="button" class="absolute right-4 block lg:hidden" aria-label="Menu Navigasi">
+              <span class="lines origin-top-left transition duration-300 ease-in-out"></span>
+              <span class="lines transition duration-300 ease-in-out"></span>
+              <span class="lines origin-bottom-left transition duration-300 ease-in-out"></span>
+            </button>
+            <nav
+              id="nav-menu"
+              class="absolute right-4 top-full opacity-0 hidden w-full max-w-[250px] rounded-lg bg-bg py-5 shadow-lg bg-white
+              transition ease-in-out duration-200
+              lg:static lg:block lg:max-w-full lg:rounded-none lg:shadow-none lg:opacity-100 lg:bg-transparent"
+            >
+              <ul class="block lg:flex">
+                <li class="group">
+                  <a href="/" class="navbar_li">Beranda</a>
+                </li>
+                <li class="group">
+                  <a href="/#about" class="navbar_li">Tentang</a>
+                </li>
+                <li class="group">
+                  <a href="/#layanan" class="navbar_li">Layanan</a>
+                </li>
+                <li class="group">
+                  <a href="/#kontak" class="navbar_li">Kontak</a>
+                </li>
+                <li class="group pt-4 lg:pt-0">
+                  <a href="/#janji-temu" class="mx-8 flex justify-center py-2 px-6 text-base text-white bg-primary rounded-2xl group-hover:opacity-80">Buat Janji</a>
+                </li>
+              </ul>
+            </nav>
+            <script is:inline></script>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="pt-38 lg:pt-33 min-h-96">
+      <slot />
+    </main>
+    <a href="#headContact" class="fixed right-6 -bottom-20 -translate-y-0 bi-arrow-up text-2xl bg-primary w-14 h-14 rounded-full flex justify-center items-center text-white transition ease-linear duration-200" id="navTop"></a>
+    <footer class="pt-8 bg-background2">
+      <div class="w-full">
+        <div class="flex flex-wrap gap-5 justify-center px-6 mb-12">
+          <div class="w-full lg:w-2/6 pt-4">
+            <a href="/" class="text-primary font-semibold text-xl">{metadata.name}</a>
+            <div class="pt-3">
+              <p class="font-light text-balance">{metadata.short_desc}</p>
+              <p class="mt-4"><strong>Kontak: </strong><span>{metadata.phone}</span></p>
+              <p class=""><strong>Email: </strong><span>{metadata.mail}</span></p>
+            </div>
+          </div>
+          <div class="w-full lg:w-1/6 pt-8 lg:pt-0">
+            <h4 class="font-semibold text-lg">Informasi Umum</h4>
+            <ul class="pt-4 flex flex-col gap-4 font-light">
+              <li class="group"><a href="/" class="footer_li">Beranda</a></li>
+              <li class="group"><a href="/" class="footer_li">Tentang Kami</a></li>
+              <li class="group"><a href="/" class="footer_li">Layanan Rumah Sakit</a></li>
+              <li class="group"><a href="/" class="footer_li">Kontak & Lokasi</a></li>
+              <li class="group"><a href="/" class="footer_li">FAQ</a></li>
+            </ul>
+          </div>
+          <div class="w-full lg:w-1/6 pt-4 lg:pt-0">
+            <h4 class="font-semibold text-lg">Layanan Medis</h4>
+            <ul class="pt-4 flex flex-col gap-4 font-light">
+              <li class="group"><a href="/" class="footer_li">Spesialis Kardiologi (Jantung)</a></li>
+              <li class="group"><a href="/" class="footer_li">Spesialis Neurologi (Saraf)</a></li>
+              <li class="group"><a href="/" class="footer_li">Spesialis Hepatologi (Hati)</a></li>
+              <li class="group"><a href="/" class="footer_li">Spesialis Pediatri (Anak)</a></li>
+              <li class="group"><a href="/" class="footer_li">Klinik Mata</a></li>
+            </ul>
+          </div>
+          <div class="w-full lg:w-1/6 pt-4 lg:pt-0">
+            <h4 class="font-semibold text-lg">Informasi Pasien</h4>
+            <ul class="pt-4 flex flex-col gap-4 font-light">
+              <li class="group"><a href="/" class="footer_li">Prosedur Pendaftaran</a></li>
+              <li class="group"><a href="/" class="footer_li">Panduan BPJS</a></li>
+              <li class="group"><a href="/" class="footer_li">Hak & Kewajiban Pasien</a></li>
+              <li class="group"><a href="/" class="footer_li">Jadwal Besuk</a></li>
+              <li class="group"><a href="/" class="footer_li">Tarif & Estimasi Biaya</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm m-4">
+          <div class="w-full p-4 flex items-center justify-center text-center">
+            <p class="text-sm">© 2025 <a href="/">{metadata.name}™</a> All Rights Reserved</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/js/script.js" is:inline></script>
+  </body>
+</html>

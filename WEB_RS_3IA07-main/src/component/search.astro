@@ -1,0 +1,23 @@
+---
+interface Props {
+  search: any;
+  type: any;
+  label: any;
+  name: any;
+  action: any;
+  input?: string;
+}
+const { search, type, label, name, action, input = "" } = Astro.props;
+---
+
+<form class="w-full max-w-md mx-auto" method="post" action={action}>
+  <input type="text" id="type" name="type" class="invisible p-0 h-0" value={type} />
+  <label for={name} class="mb-2 text-sm font-medium text-gray-900 sr-only">{label}</label>
+  <div class="relative">
+    <div class="absolute inset-y-0 rtl:inset-x-0 start-0 flex items-center ps-3.5 pointer-events-none">
+      <div class="bi-search"></div>
+    </div>
+    <input type="text" value={input} id={name} name={name} class="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500 \" placeholder={label} required />
+    <button type="submit" class="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2">{search}</button>
+  </div>
+</form>

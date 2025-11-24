@@ -1,0 +1,60 @@
+---
+import Main from "../component/main.astro";
+import SectionTitle from "../component/sectionTitle.astro";
+import MongodbRS from "../lib/core/mongodb";
+
+const flash = Astro.locals;
+if (!flash.userId) return Astro.redirect("/");
+
+const query = await new MongodbRS().db_collection("rs_janjiTemu").readScheduleByID(flash.userId);
+if (!query) return Astro.redirect("/");
+const result: string = query.noreg;
+// console.log(result);
+---
+
+<Main endpoint="Daftar Janji Temu">
+  <section id="top" class="bg-cover bg-center pt-12">
+    <div class="container">
+      <div class="flex flex-wrap justify-center px-6">
+        <SectionTitle title="Daftar Janji Temu" />
+        <div class="w-full flex justify-center items-center max-h-full">
+          <div class="relative p-4 w-full max-w-md max-h-full">
+            <div class="relative bg-white rounded-lg shadow-sm">
+              <div class="p-4 md:p-5 text-center">
+                <div class="bi-check2-circle text-4xl"></div>
+                <h3 class="mb-5 text-lg font-normal text-gray-500">Jadwal Sudah Dibuat</h3>
+                <p>Berikut adalah Nomor Registrasi yang perlu anda simpan</p><br />
+                <div class="grid grid-cols-8 gap-2 w-full max-w-[23rem]">
+                  <label for="npm-install" class="sr-only">Label</label>
+                  <input id="npm-install" type="text" class="col-span-6 bg-gray-50 border border-gray-300 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" value={result} disabled readonly />
+                  <button
+                    data-copy-to-clipboard-target="npm-install"
+                    class="col-span-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto py-2.5 text-center items-center inline-flex justify-center"
+                  >
+                    <span id="default-message">Copy</span>
+                    <span id="success-message" class="hidden">
+                      <div class="inline-flex items-center">
+                        <svg class="w-3 h-3 text-white me-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 12">
+                          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5.917 5.724 10.5 15 1.5"></path>
+                        </svg>
+                        Copied!
+                      </div>
+                    </span>
+                  </button>
+                </div>
+                <br />
+                <button
+                  type="button"
+                  class="text-white bg-primary hover:bg-primary/60 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center"
+                  onclick="window.location.href = '/'"
+                >
+                  Kembali
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Main>

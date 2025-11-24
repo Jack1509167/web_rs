@@ -1,0 +1,13 @@
+---
+import Main from "../component/main.astro";
+
+const flash = Astro.locals;
+if (!flash.msg) return Astro.redirect("/");
+---
+
+<Main endpoint="Terjadi Kesalahan">
+  <script is:inline define:vars={{ msg: flash.msg, redirect: flash.redirect }}>
+    alert(msg);
+    window.location.href = redirect;
+  </script>
+</Main>

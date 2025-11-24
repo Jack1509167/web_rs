@@ -1,0 +1,7 @@
+---
+import MongodbRS from "../../../../lib/core/mongodb";
+const { noreg } = Astro.params;
+
+await new MongodbRS().db_collection("rs_janjiTemu").deleteSchedule(noreg);
+return Astro.redirect("/internal/admin");
+---

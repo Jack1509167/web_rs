@@ -1,0 +1,128 @@
+---
+import Main from "../../../component/main.astro";
+import "../../../styles/global.css";
+import MongodbRS from "../../../lib/core/mongodb";
+
+const flash = Astro.locals;
+
+const schedules = await new MongodbRS().db_collection("rs_janjiTemu").dataAll();
+const readDoctor = await new MongodbRS().db_collection("rs_doctors").dataAll();
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Admin</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link href="/css/bootstrap-icons/bootstrap-icons.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://flowbite.com/docs/main.css?v=3.1.2a" />
+  </head>
+  <body>
+    {
+      flash.prompt == "needLogin" && (
+        <section id="login" class="my-autooverflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full flex bg-gray-200">
+          <div class="relative px-12 py-4 w-full max-w-lg max-h-full">
+            <div class="relative bg-white rounded-lg shadow-lg">
+              <div class="flex items-center justify-center p-4 md:p-5 border-b rounded-t  border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-900">Login</h3>
+              </div>
+              <div class="p-4 md:p-5 space-y-4">
+                <form action="/portal" method="post" class="w-full">
+                  <div class="form">
+                    <input type="text" id="type" name="type" class="invisible p-0 h-0" readonly value="loginAdmin" />
+                    <div class="">
+                      <label for="username" class="form_label">
+                        Username
+                      </label>
+                      <input type="text" name="username" id="username" class="form_input" />
+                    </div>
+                    <div class="pb-4">
+                      <label for="password" class="form_label">
+                        Password
+                      </label>
+                      <input type="password" name="password" id="password" class="form_input" />
+                    </div>
+                    <div class="flex justify-center w-full">
+                      <button type="submit" class="cursor-pointer text-white bg-primary rounded-xl w-auto px-14 py-3 text-center">
+                        Login Now
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
+      )
+    }
+    {
+      flash.prompt == "loggedIn" && (
+        <section id="listJanji" class="w-full pt-12 px-12">
+          <div class="container">
+            <div class="flex flex-col justify-center items-center">
+              <div class="w-full">
+                <h3 class="font-semibold text-4xl text-center">Daftar Pasien</h3>
+              </div>
+              <div class="w-full pt-12 rounded-xl relative overflow-x-auto">
+                <table class="w-full text-left rtl:text-right text-gray-600">
+                  <thead class="text-gray-900 bg-gray-100 text-center text-sm">
+                    <tr>
+                      <th scope="col" class="px-6 py-4">
+                        Nama Pasien
+                      </th>
+                      <th scope="col" class="px-6 py-4">
+                        Tanggal Temu
+                      </th>
+                      <th scope="col" class="px-6 py-4">
+                        Spesialis
+                      </th>
+                      <th scope="col" class="px-6 py-4">
+                        Nama Dokter
+                      </th>
+                      <th scope="col" class=" py-4">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {schedules?.map((data) => (
+                      <tr class="bg-white border-b border-gray-200 text-center">
+                        <th class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap text-sm">{data.name}</th>
+                        <td class="px-6 py-4 text-sm">{data.date}</td>
+                        <td class="px-6 py-4 text-sm">{data.spesialist}</td>
+                        <td class="px-6 py-4 text-sm">{readDoctor?.find((d) => d.code == data.doctor).name}</td>
+                        <td class="px-6 py-4 flex flex-wrap justify-center" id="editAndDelete">
+                          <div class="w-auto flex justify-center items-center">
+                            <button class="m-2 p-2 w-24 border rounded-xl font-light text-white bg-primary hover:bg-primary/60" id="edit" onclick={`window.location.href = '/internal/admin/edit/${data.noreg}'`}>
+                              Ubah
+                            </button>
+                          </div>
+                          <div class="w-auto flex justify-center items-center">
+                            <button class="m-2 p-2 w-24 border rounded-xl font-light text-white bg-red-600 hover:bg-red-600/60" id="edit" onclick={`deleteSchedule('${data.noreg}', '${data.name}')`}>
+                              Hapus
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <script is:inline >
+            const deleteSchedule = (noreg, name)=>{
+              const msg =  `Anda yakin ingin menghapus jadwal ${name}?`
+              if(confirm(msg)){
+                window.location.href = `/internal/admin/delete/${noreg}`
+              }
+            }
+          </script>
+          <a href="/internal/admin/message" class="fixed right-2 bottom-2 text-lg px-4 bg-primary w-auto h-14 rounded-full flex justify-center items-center text-white transition ease-linear duration-200" id="navTop">Pesan Feedback</a>
+        </section>
+      )
+    }
+  </body>
+</html>

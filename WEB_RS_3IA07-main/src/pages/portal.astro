@@ -1,0 +1,61 @@
+---
+import Main from "../component/main.astro";
+import mongodbRS from "../lib/core/mongodb";
+import { createAlert } from "../lib/core/alert";
+import MongodbRS from "../lib/core/mongodb";
+
+if (Astro.request.method !== "POST") {
+  return Astro.redirect("/");
+}
+
+try {
+  const formDataSend = await Astro.request.formData();
+
+  switch (formDataSend.get("type")) {
+    case "janjiTemu":
+      const doc = {
+        name: formDataSend.get("name"),
+        email: formDataSend.get("email"),
+        phone: formDataSend.get("phone"),
+        date: formDataSend.get("date"),
+        spesialist: formDataSend.get("spesialist"),
+      };
+      Astro.cookies.set("userData", doc);
+      return Astro.redirect("/janji-temu");
+
+    case "searchNoReg":
+      const noreg = formDataSend.get("noreg");
+      if (noreg && typeof noreg == "string") {
+        const validation = parseInt(noreg);
+        try {
+          Astro.cookies.set("noreg", noreg);
+          return Astro.redirect("/search");
+        } catch (e) {
+          console.error(e);
+          createAlert(Astro.cookies, "Nomor Registrasi tidak Valid!", "/");
+          return Astro.redirect("/alert");
+        }
+      }
+
+    case "loginAdmin":
+      const username = formDataSend.get("username");
+      const password = formDataSend.get("password");
+
+      if (username && password) {
+        const checkAccount = await new MongodbRS().db_collection("rs_account").checkAccount(username);
+        if (checkAccount) {
+          if (checkAccount.password == password) {
+            Astro.cookies.set("usr", username);
+            Astro.cookies.set("pswd", password);
+            return Astro.redirect("/internal/admin");
+          }
+        }
+      }
+
+    default:
+      return Astro.redirect("/");
+  }
+} catch (e) {
+  console.error(e);
+}
+---
